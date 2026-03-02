@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw System Audit — 2026-03-02</title>
+    <style>
+        :root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--text-muted:#8b949e;--accent:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--orange:#db6d28}
+        *{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+        .hero{background:linear-gradient(135deg,#1a1e2e 0%,#0d1117 50%,#1a1220 100%);border-bottom:1px solid var(--border);padding:3rem 2rem;text-align:center}
+        .hero h1{font-size:2.2rem;font-weight:800;margin-bottom:.5rem;background:linear-gradient(90deg,var(--accent),#a371f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .hero .subtitle{color:var(--text-muted);font-size:1.1rem}.hero .date{color:var(--text-muted);font-size:.9rem;margin-top:.5rem}
+        .container{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
+        .verdict-bar{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin:2rem 0}
+        .verdict-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.2rem 1.5rem;min-width:200px;text-align:center}
+        .verdict-card .number{font-size:2.5rem;font-weight:800}.verdict-card .label{color:var(--text-muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.05em}
+        .verdict-card.ok .number{color:var(--green)}.verdict-card.warn .number{color:var(--yellow)}.verdict-card.fail .number{color:var(--red)}.verdict-card.info .number{color:var(--accent)}
+        section{margin-bottom:2.5rem}h2{font-size:1.5rem;font-weight:700;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+        h3{font-size:1.15rem;font-weight:600;margin:1.5rem 0 .75rem;color:var(--accent)}
+        table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.92rem}th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--border)}
+        th{background:var(--surface);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:.8rem;letter-spacing:.04em}tr:hover{background:rgba(88,166,255,.04)}
+        .status{font-weight:600;white-space:nowrap}.status-ok{color:var(--green)}.status-warn{color:var(--yellow)}.status-fail{color:var(--red)}.status-off{color:var(--text-muted)}.status-idle{color:var(--orange)}
+        .priority-badge{display:inline-block;padding:.15rem .6rem;border-radius:20px;font-size:.78rem;font-weight:700}
+        .p0{background:rgba(248,81,73,.2);color:var(--red);border:1px solid rgba(248,81,73,.4)}.p1{background:rgba(210,153,34,.2);color:var(--yellow);border:1px solid rgba(210,153,34,.4)}.p2{background:rgba(63,185,80,.2);color:var(--green);border:1px solid rgba(63,185,80,.4)}
+        .chain{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:.88rem;overflow-x:auto}
+        .chain .step{margin:.3rem 0}.chain .arrow{color:var(--text-muted)}
+        .action-list{list-style:none;padding:0}.action-list li{padding:.8rem 1rem;margin:.5rem 0;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;align-items:flex-start;gap:.75rem}
+        .action-list li .checkbox{width:18px;height:18px;border:2px solid var(--border);border-radius:4px;flex-shrink:0;margin-top:2px}
+        .action-list .action-text{flex:1}.action-list .action-text strong{color:var(--text)}.action-list .action-text p{color:var(--text-muted);font-size:.88rem;margin-top:.2rem}
+        .note-box{background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.3);border-radius:8px;padding:1rem 1.2rem;margin:1rem 0;font-size:.92rem}
+        .note-box.warn{background:rgba(210,153,34,.08);border-color:rgba(210,153,34,.3)}.note-box.error{background:rgba(248,81,73,.08);border-color:rgba(248,81,73,.3)}
+        .memory-diagram{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:1rem 0}
+        .mem-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem}.mem-card h4{font-size:.95rem;margin-bottom:.5rem}
+        .mem-card .stat{color:var(--text-muted);font-size:.85rem}.mem-card .stat strong{color:var(--text)}
+        .mem-card.active{border-color:var(--green)}.mem-card.disabled{border-color:var(--red);opacity:.6}.mem-card.idle{border-color:var(--orange)}
+        footer{text-align:center;padding:2rem;color:var(--text-muted);font-size:.85rem;border-top:1px solid var(--border)}footer a{color:var(--accent);text-decoration:none}
+        @media(max-width:700px){.hero h1{font-size:1.6rem}.verdict-bar{flex-direction:column;align-items:center}table{font-size:.82rem}th,td{padding:.4rem .5rem}}
+    </style>
+</head>
+<body>
+<div class="hero">
+    <h1>🔧 OpenClaw System Audit</h1>
+    <div class="subtitle">Post-Incident Full System Review & Action Plan</div>
+    <div class="date">2 marca 2026 • Tank AI Operator • Warsaw/UTC</div>
+</div>
+<div class="container">
+    <div class="verdict-bar">
+        <div class="verdict-card ok"><div class="number">12</div><div class="label">Components OK</div></div>
+        <div class="verdict-card warn"><div class="number">4</div><div class="label">Warnings</div></div>
+        <div class="verdict-card fail"><div class="number">3</div><div class="label">Failovers Dead</div></div>
+        <div class="verdict-card info"><div class="number">93</div><div class="label">Tools Loaded</div></div>
+    </div>
+    <div class="note-box error"><strong>⚡ Verdict:</strong> System works on primary (Anthropic), but has <strong>ZERO working failovers</strong> and several unused/wasted components. All 3 fallbacks route through LiteLLM on Spark which is unreachable from Tank.</div>
+
+    <section><h2>📊 Component Status</h2>
+    <h3>Core Services</h3>
+    <table><thead><tr><th>Component</th><th>Status</th><th>Details</th></tr></thead><tbody>
+        <tr><td>Gateway (OpenClaw)</td><td class="status status-ok">✅ OK</td><td>v2026.2.3-1, running, 443 MB RAM</td></tr>
+        <tr><td>WhatsApp</td><td class="status status-ok">✅ OK</td><td>Connected, responds</td></tr>
+        <tr><td>Mattermost</td><td class="status status-warn">⚠️ WARN</td><td>3 failed deliveries (403 + missing bot token)</td></tr>
+        <tr><td>Discord</td><td class="status status-off">❓ Untested</td><td>No data this session</td></tr>
+        <tr><td>Whisper</td><td class="status status-ok">✅ OK</td><td>large-v3 + variants, Docker up 25h</td></tr>
+        <tr><td>SearXNG</td><td class="status status-ok">✅ OK</td><td>43 results on test, Docker up 4d</td></tr>
+        <tr><td>TEI Embeddings</td><td class="status status-idle">⚠️ IDLE</td><td>Docker running but <strong>no plugin uses it</strong></td></tr>
+    </tbody></table>
+    <h3>MCP Bridge & Tools</h3>
+    <table><thead><tr><th>Component</th><th>Status</th><th>Details</th></tr></thead><tbody>
+        <tr><td>MCP Bridge Plugin</td><td class="status status-ok">✅ OK</td><td>allowTools + sanitizeSchema active</td></tr>
+        <tr><td>Ruflo Swarm (MCP)</td><td class="status status-ok">✅ OK</td><td>215 available → 36 registered (allowTools)</td></tr>
+        <tr><td>Playwright (MCP)</td><td class="status status-ok">✅ OK*</td><td>32 tools registered</td></tr>
+        <tr><td>OpenClaw Builtin</td><td class="status status-ok">✅ OK</td><td>~25 tools</td></tr>
+        <tr><td><strong>Total per request</strong></td><td class="status status-warn">⚠️ 93</td><td>All tools sent every request (no per-skill routing)</td></tr>
+    </tbody></table></section>
+
+    <section><h2>🧠 Memory Architecture (4 Layers)</h2>
+    <div class="memory-diagram">
+        <div class="mem-card active"><h4>✅ Memory-Unified (FTS5)</h4><div class="stat"><strong>920</strong> skills indexed</div><div class="stat"><strong>2,006</strong> unified entries</div><div class="stat"><strong>55</strong> skill executions</div><div class="stat">Backend: SQLite FTS5 (keyword)</div><div class="stat">Uses: <strong>NOT TEI</strong></div></div>
+        <div class="mem-card active"><h4>✅ Ruflo HNSW (Vector)</h4><div class="stat"><strong>3,373</strong> entries</div><div class="stat"><strong>100%</strong> embedding coverage</div><div class="stat">Backend: sql.js + HNSW v3.0.0</div><div class="stat">Uses: <strong>built-in embeddings</strong> (not TEI)</div><div class="stat">Namespaces: unified (1919), trading (1212), kb (127)</div></div>
+        <div class="mem-card disabled"><h4>❌ Memory-LanceDB</h4><div class="stat">Status: <strong>DISABLED</strong></div><div class="stat">Was configured for TEI</div><div class="stat">Agent SQLite: <strong>0 rows</strong></div></div>
+        <div class="mem-card idle"><h4>⚠️ TEI Docker</h4><div class="stat">Status: <strong>RUNNING but UNUSED</strong></div><div class="stat">Port 8080, healthy</div><div class="stat">No plugin connects to it</div></div>
+    </div>
+    <div class="note-box warn"><strong>📝</strong> 4 memory systems, only 2 active. TEI runs idle. Vertex AI was never in the stack — terminology error in initial report.</div></section>
+
+    <section><h2>🔄 Failover Chain</h2>
+    <div class="chain">
+        <div class="step"><span class="status-ok">●</span> <strong>Primary:</strong> anthropic/claude-opus-4-6 <span class="arrow">→</span> Anthropic API (OAuth)</div>
+        <div class="step"><span class="status-fail">●</span> <strong>Fallback 1:</strong> litellm-spark/gemini-3-flash <span class="arrow">→</span> LiteLLM <span class="arrow">→</span> Google AI Studio <em>(unreachable from Tank)</em></div>
+        <div class="step"><span class="status-fail">●</span> <strong>Fallback 2:</strong> litellm-spark/gpt-5.2 <span class="arrow">→</span> LiteLLM <span class="arrow">→</span> OpenAI <em>(quota exceeded)</em></div>
+        <div class="step"><span class="status-fail">●</span> <strong>Fallback 3:</strong> litellm-spark/gpt-oss-120b <span class="arrow">→</span> LiteLLM <span class="arrow">→</span> Ollama <em>(timeout)</em></div>
+    </div>
+    <div class="note-box error"><strong>🚨 Single Point of Failure:</strong> All 3 fallbacks go through LiteLLM on Spark (192.168.1.80:4000). When Anthropic goes down, bot goes completely silent.</div>
+    <h3>Available but unused</h3>
+    <div class="chain">
+        <div class="step"><span class="status-ok">●</span> <strong>google-ai/gemini-3-flash-preview</strong> <span class="arrow">→</span> Direct Google AI Studio (free) — <strong>NOT in fallback chain!</strong></div>
+        <div class="step"><span class="status-ok">●</span> <strong>xai/grok-4</strong> <span class="arrow">→</span> Direct X.AI API — <strong>NOT in fallback chain!</strong></div>
+    </div>
+    <div class="note-box"><strong>💡 Fix:</strong> Add <code>google-ai/gemini-3-flash-preview</code> as Fallback 1 (direct, no LiteLLM).</div></section>
+
+    <section><h2>🐝 Ruflo Swarm — 215 Tools</h2>
+    <table><thead><tr><th>Category</th><th>Total</th><th>Allowed</th><th>Notes</th></tr></thead><tbody>
+        <tr><td>hooks</td><td>36</td><td class="status status-fail">0</td><td>Internal — not needed</td></tr>
+        <tr><td>browser</td><td>23</td><td class="status status-fail">0</td><td>Duplicates Playwright</td></tr>
+        <tr><td>agentdb</td><td>15</td><td class="status status-ok">3</td><td>Pattern store/search/health</td></tr>
+        <tr><td>claims</td><td>12</td><td class="status status-fail">0</td><td>Internal handoff</td></tr>
+        <tr><td>transfer</td><td>11</td><td class="status status-fail">0</td><td>Plugin store</td></tr>
+        <tr><td>workflow</td><td>9</td><td class="status status-ok">4</td><td>Create/execute/status/list</td></tr>
+        <tr><td>hive-mind</td><td>9</td><td class="status status-fail">0</td><td>Unused</td></tr>
+        <tr><td>daa</td><td>8</td><td class="status status-fail">0</td><td>Advanced analysis</td></tr>
+        <tr><td>agent</td><td>7</td><td class="status status-ok">5</td><td>Spawn/terminate/status/list/health</td></tr>
+        <tr><td>memory</td><td>7</td><td class="status status-ok">5</td><td>Store/retrieve/search/list/stats</td></tr>
+        <tr><td>task</td><td>6</td><td class="status status-ok">6</td><td>Full CRUD</td></tr>
+        <tr><td>session</td><td>5</td><td class="status status-ok">4</td><td>Save/restore/list/info</td></tr>
+        <tr><td>github</td><td>5</td><td class="status status-ok">3</td><td>Repo/PR/issues</td></tr>
+        <tr><td>system</td><td>5</td><td class="status status-ok">2</td><td>Status + health</td></tr>
+        <tr><td>terminal</td><td>5</td><td class="status status-ok">2</td><td>Execute + list</td></tr>
+        <tr><td>swarm</td><td>4</td><td class="status status-ok">2</td><td>Status + health</td></tr>
+        <tr><td><em>+8 more</em></td><td>48</td><td class="status status-fail">0</td><td>embeddings, coordination, config, etc.</td></tr>
+    </tbody><tfoot><tr><th>TOTAL</th><th>215</th><th>36</th><th>83% filtered by allowTools</th></tr></tfoot></table></section>
+
+    <section><h2>🚨 Problems & Action Plan</h2>
+    <h3><span class="priority-badge p0">P0 CRITICAL</span></h3>
+    <ul class="action-list">
+        <li><div class="checkbox"></div><div class="action-text"><strong>P0.1: All failovers dead</strong><p>Add google-ai/gemini-3-flash-preview as direct fallback 1. Test with forced overload.</p></div></li>
+        <li><div class="checkbox"></div><div class="action-text"><strong>P0.2: Payload log 5 GB</strong><p>Truncate + logrotate or disable debug logger.</p></div></li>
+    </ul>
+    <h3><span class="priority-badge p1">P1 IMPORTANT</span></h3>
+    <ul class="action-list">
+        <li><div class="checkbox"></div><div class="action-text"><strong>P1.1: 93 tools in every request</strong><p>No per-skill routing. Research OpenClaw availableTools mechanism for dynamic filtering.</p></div></li>
+        <li><div class="checkbox"></div><div class="action-text"><strong>P1.2: TEI running but unused</strong><p>Stop Docker container or wire into memory-unified. Recommendation: stop.</p></div></li>
+        <li><div class="checkbox"></div><div class="action-text"><strong>P1.3: Mattermost 403</strong><p>Add bot token, fix permissions.</p></div></li>
+        <li><div class="checkbox"></div><div class="action-text"><strong>P1.4: Memory cleanup</strong><p>Remove disabled LanceDB, verify agent SQLite purpose.</p></div></li>
+    </ul>
+    <h3><span class="priority-badge p2">P2 LOW</span></h3>
+    <ul class="action-list">
+        <li><div class="checkbox"></div><div class="action-text"><strong>P2.1: GPT-5.2 quota</strong><p>Top up OpenAI or remove from fallbacks.</p></div></li>
+        <li><div class="checkbox"></div><div class="action-text"><strong>P2.2: GPT-OSS timeout</strong><p>Check Ollama on Spark.</p></div></li>
+    </ul></section>
+
+    <section><h2>❓ Vertex AI — Final Answer</h2>
+    <div class="note-box"><strong>Vertex AI is NOT in our stack.</strong> Gemini goes through Google AI Studio (API key, free). LiteLLM prefix <code>gemini/</code> = AI Studio, <code>vertex_ai/</code> = Vertex. We have the former. Initial report terminology was wrong.</div></section>
+</div>
+<footer><p>Generated by <strong>Wiki</strong> (Wiktoria Sterling) • OpenClaw System Audit • 2 March 2026</p></footer>
+</body></html>
